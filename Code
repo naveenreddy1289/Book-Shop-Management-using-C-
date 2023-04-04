@@ -1,0 +1,138 @@
+#include<iostream>
+#include<fstream>
+#include<cstring>
+#include<cstdlib>
+using namespace std;
+
+class Book {
+    int book_id;
+    char book_name[50];
+    char author_name[50];
+    float book_price;
+
+public:
+    void addBook();
+    void displayBooks();
+    void searchBook();
+    void deleteBook();
+};
+
+void Book::addBook() {
+    cout << "Enter book ID: ";
+    cin >> book_id;
+    cout << "Enter book name: ";
+    cin.ignore();
+    cin.getline(book_name, 50);
+    cout << "Enter author name: ";
+    cin.getline(author_name, 50);
+    cout << "Enter book price: ";
+    cin >> book_price;
+    ofstream fout("book.dat", ios::binary | ios::app);
+    fout.write((char*)this, sizeof(*this));
+    fout.close();
+    cout << "\nBook added successfully\n";
+}
+
+void Book::displayBooks() {
+    ifstream fin("book.dat", ios::binary);
+    if(!fin) {
+        cout << "File not found\n";
+        return;
+    }
+    cout << "\nList of books:\n\n";
+    while(fin.read((char*)this, sizeof(*this))) {
+        cout << "Book ID: " << book_id << endl;
+        cout << "Book name: " << book_name << endl;
+        cout << "Author name: " << author_name << endl;
+        cout << "Book price: " << book_price << endl;
+        cout << "-------------------------------\n";
+    }
+    fin.close();
+}
+
+void Book::searchBook() {
+    int id;
+    cout << "Enter book ID to search: ";
+    cin >> id;
+    ifstream fin("book.dat", ios::binary);
+    if(!fin) {
+        cout << "File not found\n";
+        return;
+    }
+    bool found = false;
+    while(fin.read((char*)this, sizeof(*this))) {
+        if(book_id == id) {
+            cout << "\nBook found\n\n";
+            cout << "Book ID: " << book_id << endl;
+            cout << "Book name: " << book_name << endl;
+            cout << "Author name: " << author_name << endl;
+            cout << "Book price: " << book_price << endl;
+            cout << "-------------------------------\n";
+            found = true;
+            break;
+        }
+    }
+    if(!found) {
+        cout << "\nBook not found\n";
+    }
+    fin.close();
+}
+
+void Book::deleteBook() {
+    int id;
+    cout << "Enter book ID to delete: ";
+    cin >> id;
+    ifstream fin("book.dat", ios::binary);
+    if(!fin) {
+        cout << "File not found\n";
+        return;
+    }
+    ofstream fout("temp.dat", ios::binary);
+    bool found = false;
+    while(fin.read((char*)this, sizeof(*this))) {
+        if(book_id == id) {
+            found = true;
+        } else {
+            fout.write((char*)this, sizeof(*this));
+        }
+    }
+    fin.close();
+    fout.close();
+    if(found) {
+        remove("book.dat");
+        rename("temp.dat", "book.dat");
+        cout << "\nBook deleted successfully\n";
+    } else {
+        remove("temp.dat");
+        cout << "\nBook not found\n";
+    }
+}
+
+int main() {
+    int choice;
+    Book b;
+    do {
+        cout << "\nBOOK SHOP MANAGEMENT SYSTEM\n";
+        cout << "1. Add book\n";
+        cout << "2. Display books\n";
+        cout << "3. Search book\n";
+        cout << "4. Delete book\n";
+cout << "5. Exit\n";
+cout << "Enter your choice: ";
+cin >> choice;
+switch(choice) {
+case 1: b.addBook();
+break;
+case 2: b.displayBooks();
+break;
+case 3: b.searchBook();
+break;
+case 4: b.deleteBook();
+break;
+case 5: exit(0);
+default: cout << "Invalid choice\n";
+}
+} while(choice != 5);
+return 0;
+}
+ 
