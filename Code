@@ -276,3 +276,221 @@ int main() {
     } while(choice != 5);
     return 0;
 }
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#include <iostream>
+#include <vector>
+#include <map>
+#include <set>
+#include <algorithm>
+using namespace std;
+
+class Book {
+    int book_id;
+    string book_name;
+    string author_name;
+    float book_price;
+    int stock_quantity;
+
+public:
+    Book(int id, string name, string author, float price, int quantity) :
+        book_id(id), book_name(name), author_name(author), book_price(price), stock_quantity(quantity) {}
+
+    int getBookID() const {
+        return book_id;
+    }
+
+    string getBookName() const {
+        return book_name;
+    }
+
+    string getAuthorName() const {
+        return author_name;
+    }
+
+    float getBookPrice() const {
+        return book_price;
+    }
+
+    int getStockQuantity() const {
+        return stock_quantity;
+    }
+
+    void updateStockQuantity(int quantity) {
+        stock_quantity = quantity;
+    }
+
+    void displayBookDetails() const {
+        cout << book_id << "\t" << book_name << "\t\t" << author_name << "\t\t" << book_price << "\t\t" << stock_quantity << endl;
+    }
+
+    // Overloading < operator for sorting
+    bool operator < (const Book& book) const {
+        return book_id < book.book_id;
+    }
+};
+
+class BookShop {
+    vector<Book> books;
+    map<int, int> bookIndexByID; // Book ID to index in books vector
+    map<string, set<int>> booksByAuthor; // Author name to set of book IDs
+
+public:
+    void addBook();
+    void displayBooks();
+    void searchBookByID();
+    void deleteBook();
+    void updateStock();
+    void searchBooksByAuthor();
+    void sortBooksByPrice();
+};
+
+void BookShop::addBook() {
+    int id, quantity;
+    string name, author;
+    float price;
+    cout << "Enter book ID: ";
+    cin >> id;
+    cin.ignore(); // to ignore the newline after the integer input
+    if (bookIndexByID.find(id) != bookIndexByID.end()) {
+        cout << "\nBook ID already exists. Try another ID.\n";
+        return;
+    }
+    cout << "Enter book name: ";
+    getline(cin, name);
+    cout << "Enter author name: ";
+    getline(cin, author);
+    cout << "Enter book price: ";
+    cin >> price;
+    cout << "Enter stock quantity: ";
+    cin >> quantity;
+    Book b(id, name, author, price, quantity);
+    books.push_back(b);
+    int index = books.size() - 1;
+    bookIndexByID[id] = index;
+    booksByAuthor[author].insert(id);
+    cout << "\nBook added successfully\n";
+}
+
+void BookShop::displayBooks() {
+    if (books.empty()) {
+        cout << "\nNo books available.\n";
+        return;
+    }
+    cout << "\nList of books:\n\n";
+    cout << "Book ID\tBook name\tAuthor name\tBook price\tStock Quantity\n";
+    cout << "----------------------------------------------------------------------\n";
+    for(const auto& book : books) {
+        book.displayBookDetails();
+    }
+    cout << "----------------------------------------------------------------------\n";
+}
+
+void BookShop::searchBookByID() {
+    int id;
+    cout << "Enter book ID to search: ";
+    cin >> id;
+    auto it = bookIndexByID.find(id);
+    if (it != bookIndexByID.end()) {
+        cout << "\nBook found\n\n";
+        cout << "Book ID\tBook name\tAuthor name\tBook price\tStock Quantity\n";
+        cout << "----------------------------------------------------------------------\n";
+        books[it->second].displayBookDetails();
+        cout << "----------------------------------------------------------------------\n";
+    } else {
+        cout << "\nBook not found\n";
+    }
+}
+
+void BookShop::deleteBook() {
+    int id;
+    cout << "Enter book ID to delete: ";
+    cin >> id;
+    auto it = bookIndexByID.find(id);
+    if (it != bookIndexByID.end()) {
+        int index = it->second;
+        cout << "\nBook deleted successfully\n";
+        books.erase(books.begin() + index);
+        bookIndexByID.erase(id);
+        booksByAuthor[books[index].getAuthorName()].erase(id);
+        // Update indices in bookIndexByID
+        for (auto& pair : bookIndexByID) {
+            if (pair.second > index) {
+                pair.second--;
+            }
+        }
+    } else {
+        cout << "\nBook not found\n";
+    }
+}
+
+void BookShop::updateStock() {
+    int id, quantity;
+    cout << "Enter book ID to update stock: ";
+    cin >> id;
+    auto it = bookIndexByID.find(id);
+    if (it != bookIndexByID.end()) {
+        cout << "Enter new stock quantity: ";
+        cin >> quantity;
+        books[it->second].updateStockQuantity(quantity);
+        cout << "\nStock updated successfully\n";
+    } else {
+        cout << "\nBook not found\n";
+    }
+}
+
+void BookShop::searchBooksByAuthor() {
+    string author;
+    cout << "Enter author name to search: ";
+    cin.ignore();
+    getline(cin, author);
+    auto it = booksByAuthor.find(author);
+    if (it != booksByAuthor.end()) {
+        cout << "\nBooks by " << author << ":\n\n";
+        cout << "Book ID\tBook name\tAuthor name\tBook price\tStock Quantity\n";
+        cout << "----------------------------------------------------------------------\n";
+        for (int id : it->second) {
+            books[bookIndexByID[id]].displayBookDetails();
+        }
+        cout << "----------------------------------------------------------------------\n";
+    } else {
+        cout << "\nNo books found by " << author << endl;
+    }
+}
+
+void BookShop::sortBooksByPrice() {
+    sort(books.begin(), books.end(), [](const Book& a, const Book& b) {
+        return a.getBookPrice() < b.getBookPrice();
+    });
+    cout << "\nBooks sorted by price.\n";
+}
+
+int main() {
+    int choice;
+    BookShop bs;
+    do {
+        cout << "\nBOOK SHOP MANAGEMENT SYSTEM\n";
+        cout << "1. Add book\n";
+        cout << "2. Display books\n";
+        cout << "3. Search book by ID\n";
+        cout << "4. Delete book\n";
+        cout << "5. Update stock\n";
+        cout << "6. Search books by author\n";
+        cout << "7. Sort books by price\n";
+        cout << "8. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
+        switch(choice) {
+            case 1: bs.addBook(); break;
+            case 2: bs.displayBooks(); break;
+            case 3: bs.searchBookByID(); break;
+            case 4: bs.deleteBook(); break;
+            case 5: bs.updateStock(); break;
+            case 6: bs.searchBooksByAuthor(); break;
+            case 7: bs.sortBooksByPrice(); break;
+            case 8: cout << "Exiting...\n"; return 0;
+            default: cout << "Invalid choice\n";
+        }
+    } while(choice != 8);
+    return 0;
+}
+
